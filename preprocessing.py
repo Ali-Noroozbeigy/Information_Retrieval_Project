@@ -71,7 +71,3 @@ class Preprocessing:
 
         del tokens  # in order to clean used memory
         return tokens_without_stopwords
-
-
-content = "وزیر آموزش و پرورش استعفا داد. سخنگوی دولت این موضوع را تایید کرد."
-print(Preprocessing.preprocess(content))
