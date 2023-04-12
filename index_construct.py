@@ -14,7 +14,7 @@ Positional_index = {
                     ...
 }
 """
-
+import json
 
 from preprocessing import Preprocessing
 
@@ -49,12 +49,18 @@ class PositionalIndex:
                                                                         "positions": [i]}]}
 
 
-toks = Preprocessing.preprocess("وزیر آموزش و پرورش استعفا داد. سخنگوی دولت این موضوع را تایید کرد.")
+def construct_index(path, positional_index: PositionalIndex):
+    with open(path, 'r', encoding="utf-8") as data_file:
+        data = json.load(data_file)
 
-posi_index = PositionalIndex()
-posi_index.add_to_index(toks, 1)
+    for news_id, other in data.items():
+        tokens = Preprocessing.preprocess((other['content']))
+        positional_index.add_to_index(tokens, news_id)
 
-toks = Preprocessing.preprocess("وزیر اقتصاد افزایش قیمت دلار را تایید کرد. همچنین وزیر از این افزایش ابراز نگرانی کرد.")
-posi_index.add_to_index(toks, 2)
+    with open("positional_index.json", "w", encoding="utf-8") as final_index:
+        json.dump(positional_index.pos_index, final_index, indent=4, ensure_ascii=False)
 
-print(posi_index.pos_index)
+
+positional_index = PositionalIndex()
+construct_index("./data.json", positional_index)
+# print(positional_index.pos_index)
