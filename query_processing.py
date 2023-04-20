@@ -81,15 +81,32 @@ def and_intersect(p1, p2):
     return answer
 
 
+def and_not_intersect(p1, p2):
+    answer = []
+
+    i = j = 0
+
+    while i != len(p1) and j != len(p2):
+        if p1[i]['doc_id'] == p2[j]['doc_id']:
+            i += 1
+            j += 1
+        elif p1[i]['doc_id'] < p2[j]['doc_id']:
+            answer.append({'doc_id': p1[i]['doc_id']})
+            i += 1
+        else:
+            j += 1
+    return answer
+
+
 positional_queries = []
 and_not_queries = []
 and_queries = []
 
-query = 'تایید وزیر'
+query = 'وزیر ! اقتصاد'
 parse_query()
 
 with open('./positional_index.json', 'r', encoding="utf-8") as data_file:
     data = json.load(data_file)
 
-ans = and_intersect(data[and_queries[0]]['postings'], data[and_queries[1]]['postings'])
+ans = and_not_intersect(data[and_queries[0]]['postings'], data[and_not_queries[0]]['postings'])
 print(ans)
