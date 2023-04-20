@@ -19,7 +19,7 @@ def parse_query():
 
             end = i
 
-            positional_queries.append(Preprocessing.remove_stopwords(Preprocessing.stem_tokens(tokens[start:end])))
+            phrase_queries.append(Preprocessing.remove_stopwords(Preprocessing.stem_tokens(tokens[start:end])))
             i += 1
 
         elif tokens[i] == '!':
@@ -28,8 +28,34 @@ def parse_query():
             i += 1
 
         else:
-            and_queries.append(Preprocessing.remove_stopwords(Preprocessing.stem_tokens(tokens[i:i+1]))[0])
+            x = Preprocessing.remove_stopwords(Preprocessing.stem_tokens(tokens[i:i+1]))
+            if len(x) != 0:
+                and_queries.append(x[0])
             i += 1
+
+
+def process_query():
+    with open('./positional_index.json', 'r', encoding="utf-8") as data_file:
+        data = json.load(data_file)
+
+    and_query_docs = None
+
+    if len(and_queries) > 0:
+        and_query_docs = and_intersect(data[and_queries[0]]['postings'], None)
+        for i in range(1, len(and_queries)):
+            and_query_docs = and_intersect(and_query_docs, data[and_queries[i]]['postings'])
+
+    # check if user entered phrase query
+    if len(phrase_queries) > 0:
+        for phrase_query in phrase_queries:
+            phrase_query_docs = positional_intersect(data[phrase_query[0]]['postings'], data[phrase_query[1]]['postings'])
+            and_query_docs = and_intersect(and_query_docs, phrase_query_docs)
+
+    if len(and_not_queries) > 0:
+        for and_not_query in and_not_queries:
+            and_query_docs = and_not_intersect(and_query_docs, data[and_not_query]['postings'])
+
+    return and_query_docs
 
 
 def positional_intersect(p1, p2):
@@ -67,6 +93,15 @@ def positional_intersect(p1, p2):
 def and_intersect(p1, p2):
     answer = []
 
+    if p2 is None:
+        for i in range(len(p1)):
+            answer.append({'doc_id': p1[i]['doc_id']})
+        return answer
+    elif p1 is None:
+        for i in range(len(p2)):
+            answer.append({'doc_id': p2[i]['doc_id']})
+        return answer
+
     i = j = 0
 
     while i != len(p1) and j != len(p2):
@@ -95,18 +130,20 @@ def and_not_intersect(p1, p2):
             i += 1
         else:
             j += 1
+    if j == len(p2):  # add rest of doc ids
+        while i != len(p1):
+            answer.append({'doc_id': p1[i]['doc_id']})
+            i += 1
     return answer
 
 
-positional_queries = []
+phrase_queries = []
 and_not_queries = []
 and_queries = []
 
-query = 'وزیر ! اقتصاد'
+query = 'استعفا "آموزش و پرورش" ! بودجه'
 parse_query()
 
-with open('./positional_index.json', 'r', encoding="utf-8") as data_file:
-    data = json.load(data_file)
+result = process_query()
 
-ans = and_not_intersect(data[and_queries[0]]['postings'], data[and_not_queries[0]]['postings'])
-print(ans)
+print(result)
