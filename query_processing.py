@@ -1,6 +1,61 @@
 import json
 
 from preprocessing import Preprocessing
+import tkinter as tk
+
+
+# creating gui of program, code for gui taken from ChatGPT!
+def create_gui():
+    def search():
+        global query
+        global and_queries, and_not_queries, phrase_queries
+
+        and_queries.clear()
+        and_not_queries.clear()
+        phrase_queries.clear()
+
+        # Get the search term from the entry widget
+        query = entry.get()
+
+        # Perform your search operation here
+
+        parse_query()
+        result = process_query()
+        result = prepare(result)
+
+        print(and_queries)
+
+        # Update the results in the text widget
+        results_text.delete('1.0', tk.END)
+        results_text.insert(tk.END, "Results for '{}'...\n".format(query))
+
+        for r in result:
+            results_text.insert(tk.END, f"document :{r['doc_id']}\n")
+
+    root = tk.Tk()
+    root.title("IR Project")
+
+    # Entry widget for search term
+    entry = tk.Entry(root, width=50)
+    entry.pack(padx=10, pady=10)
+
+    # Button to initiate search
+    button = tk.Button(root, text="Search", command=search)
+    button.pack(padx=10, pady=5)
+
+    # Plain text widget for showing results
+    results_frame = tk.Frame(root)
+    results_frame.pack(padx=10, pady=10)
+
+    results_text = tk.Text(results_frame, height=10, width=50)
+    results_text.pack(side=tk.LEFT)
+
+    scrollbar = tk.Scrollbar(results_frame, command=results_text.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    results_text.config(yscrollcommand=scrollbar.set)
+
+    root.mainloop()
 
 
 def parse_query():
@@ -35,9 +90,6 @@ def parse_query():
 
 
 def process_query():
-    with open('./positional_index.json', 'r', encoding="utf-8") as data_file:
-        data = json.load(data_file)
-
     and_query_docs = None
 
     if len(and_queries) > 0:
@@ -137,13 +189,49 @@ def and_not_intersect(p1, p2):
     return answer
 
 
+def prepare(result):
+
+    for r in result:
+        r['score'] = score(r['doc_id'])
+
+    result = sorted(result, key=lambda x: -x['score'])
+    return result
+
+
+def score(doc_id):
+    doc_score = 0
+
+    for and_query in and_queries:
+        for p in data[and_query]['postings']:
+            if p['doc_id'] == doc_id:
+                doc_score += p['in_doc_freq']
+                break
+
+    for phrase_query in phrase_queries:
+        for term in phrase_query:
+            for p in data[term]['postings']:
+                if p['doc_id'] == doc_id:
+                    doc_score += p['in_doc_freq']
+                    break
+
+    return doc_score
+
+
 phrase_queries = []
 and_not_queries = []
 and_queries = []
 
-query = 'استعفا "آموزش و پرورش" ! بودجه'
-parse_query()
+with open('./positional_index.json', 'r', encoding="utf-8") as data_file:
+    data = json.load(data_file)
 
-result = process_query()
+query = None
 
-print(result)
+create_gui()
+
+# query = 'قیمت دلار'
+#
+# parse_query()
+# result = process_query()
+# result = prepare(result)
+#
+# print(result)
