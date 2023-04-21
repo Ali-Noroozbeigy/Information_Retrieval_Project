@@ -29,8 +29,13 @@ def create_gui():
         results_text.delete('1.0', tk.END)
         results_text.insert(tk.END, "Results for '{}'...\n".format(query))
 
+        with open("./data.json", 'r', encoding="utf-8") as source:
+            source_data = json.load(source)
+
         for r in result:
-            results_text.insert(tk.END, f"document :{r['doc_id']}\n")
+            results_text.insert(tk.END, f"سند شماره {r['doc_id']} : {source_data[r['doc_id']]['title']}\n")
+
+        source.close()
 
     root = tk.Tk()
     root.title("IR Project")
