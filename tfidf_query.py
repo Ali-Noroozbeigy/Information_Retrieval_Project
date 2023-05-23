@@ -4,8 +4,8 @@ from math import log10
 
 
 TOTAL_DOCS = 6
-TOP_K = 5
-SIMILARITY = "COSINE"  # or JACCARD
+TOP_K = 4
+SIMILARITY = "JACCARD"  # or JACCARD
 
 
 def cosine_score():
@@ -41,6 +41,28 @@ def top_k_docs(scores: dict, k):
     return top_k
 
 
+def jaccard_score():
+
+    scores = {}
+
+    query_as_set = set(query_terms)
+
+    with open('jaccard_set.json', 'r', encoding="utf-8") as jaccard_file:
+        docs_terms = json.load(jaccard_file)
+
+    for doc in docs_terms:
+        doc_id = next(iter(doc))
+        term_set = set(doc[doc_id])
+
+        jaccard_weight = len(query_as_set.intersection(term_set)) / len(query_as_set.union(term_set))
+        scores[doc_id] = jaccard_weight
+
+    return top_k_docs(scores, TOP_K)
+
+
 query = "افزایش بودجه"
 query_terms = Preprocessing.preprocess(query)
-print(cosine_score())
+if SIMILARITY == "COSINE":
+    print(cosine_score())
+else:
+    print(jaccard_score())
