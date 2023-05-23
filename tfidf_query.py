@@ -3,6 +3,11 @@ from preprocessing import Preprocessing
 from math import log10
 
 
+TOTAL_DOCS = 6
+TOP_K = 5
+SIMILARITY = "COSINE"  # or JACCARD
+
+
 def cosine_score():
     with open('./positional_index.json', 'r', encoding="utf-8") as data_file:
         index = json.load(data_file)
@@ -11,7 +16,7 @@ def cosine_score():
     # query_terms = query.split(" ")
     for term in query_terms:
         term_postings = index[term]['postings']
-        w_term = log10(6 / len(term_postings))  # equivalent to idf of term
+        w_term = log10(TOTAL_DOCS / len(term_postings))  # equivalent to idf of term
 
         for posting in term_postings:
             w_doc = 1 + log10(posting["in_doc_freq"])  # equivalent to tf of doc
@@ -26,7 +31,7 @@ def cosine_score():
     for doc_id in scores.keys():
         scores[doc_id] /= length[int(doc_id)]
 
-    return top_k_docs(scores, 4)
+    return top_k_docs(scores, TOP_K)
 
 
 def top_k_docs(scores: dict, k):
