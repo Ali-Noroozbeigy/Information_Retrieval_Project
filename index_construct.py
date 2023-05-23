@@ -59,10 +59,10 @@ def construct_index(path, positional_index: PositionalIndex):
         tokens = Preprocessing.preprocess((other['content']))
         positional_index.add_to_index(tokens, news_id)
 
-    with open("positional_index.json", "w", encoding="utf-8") as final_index:
-        json.dump(positional_index.pos_index, final_index, indent=4, ensure_ascii=False)
+    with open("IR_positional_index.json", "w", encoding="utf-8") as final_index:
+        json.dump(positional_index.pos_index, final_index, ensure_ascii=False)
 
 
 positional_index = PositionalIndex()
-construct_index("./data.json", positional_index)
+construct_index("./IR_data_news_12k.json", positional_index)
 # print(positional_index.pos_index)

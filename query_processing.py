@@ -29,7 +29,7 @@ def create_gui():
         results_text.delete('1.0', tk.END)
         results_text.insert(tk.END, "Results for '{}'...\n".format(query))
 
-        with open("./data.json", 'r', encoding="utf-8") as source:
+        with open("./IR_data_news_12k.json", 'r', encoding="utf-8") as source:
             source_data = json.load(source)
 
         for r in result:
@@ -226,7 +226,7 @@ phrase_queries = []
 and_not_queries = []
 and_queries = []
 
-with open('./positional_index.json', 'r', encoding="utf-8") as data_file:
+with open('./IR_positional_index.json', 'r', encoding="utf-8") as data_file:
     data = json.load(data_file)
 
 query = None
