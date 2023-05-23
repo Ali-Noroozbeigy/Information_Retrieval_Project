@@ -52,6 +52,10 @@ class PositionalIndex:
 
 
 def construct_index(path, positional_index: PositionalIndex):
+
+    # used for saving documents' length for calculating score later
+    docs_length = []
+
     with open(path, 'r', encoding="utf-8") as data_file:
         data = json.load(data_file)
 
@@ -59,10 +63,31 @@ def construct_index(path, positional_index: PositionalIndex):
         tokens = Preprocessing.preprocess((other['content']))
         positional_index.add_to_index(tokens, news_id)
 
-    with open("IR_positional_index.json", "w", encoding="utf-8") as final_index:
+        from collections import Counter
+        tokens_in_doc_freq = dict(Counter(tokens))
+        docs_length.append(calculate_length(tokens_in_doc_freq))
+
+    with open("positional_index.json", "w", encoding="utf-8") as final_index:
         json.dump(positional_index.pos_index, final_index, ensure_ascii=False)
+
+    with open('Doc_length.json', "w") as docs_length_file:
+        json.dump(docs_length, docs_length_file)
+
+
+def calculate_length(freqs: dict):
+    """
+    calculates length of each document by calculating doc's tokens' tf
+    :param freqs: frequency of each token in doc
+    :return: length of document based on tf
+    """
+    from math import log10, sqrt
+    squared_sum = 0
+    for _, freq in freqs.items():
+        tf = 1 + log10(freq)
+        squared_sum += tf ** 2
+    return sqrt(squared_sum)
 
 
 positional_index = PositionalIndex()
-construct_index("./IR_data_news_12k.json", positional_index)
+construct_index("./data.json", positional_index)
 # print(positional_index.pos_index)
