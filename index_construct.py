@@ -15,8 +15,10 @@ Positional_index = {
 }
 """
 import json
-
 from preprocessing import Preprocessing
+
+
+SIMILARITY = "JACCARD"  # or JACCARD
 
 
 class PositionalIndex:
@@ -53,25 +55,37 @@ class PositionalIndex:
 
 def construct_index(path, positional_index: PositionalIndex):
 
-    # used for saving documents' length for calculating score later
-    docs_length = []
-
     with open(path, 'r', encoding="utf-8") as data_file:
         data = json.load(data_file)
 
     for news_id, other in data.items():
         tokens = Preprocessing.preprocess((other['content']))
-        positional_index.add_to_index(tokens, news_id)
 
-        from collections import Counter
-        tokens_in_doc_freq = dict(Counter(tokens))
-        docs_length.append(calculate_length(tokens_in_doc_freq))
+        if SIMILARITY == "COSINE":
+            index_for_cosine(tokens, news_id)
+        else:
+            index_for_jaccard(tokens, news_id)
 
-    with open("positional_index.json", "w", encoding="utf-8") as final_index:
-        json.dump(positional_index.pos_index, final_index, ensure_ascii=False)
+    if SIMILARITY == "COSINE":
+        with open("positional_index.json", "w", encoding="utf-8") as final_index:
+            json.dump(positional_index.pos_index, final_index, ensure_ascii=False)
+        with open('Doc_length.json', "w") as docs_length_file:
+            json.dump(docs_length, docs_length_file)
+    else:
+        with open('jaccard_set.json', 'w', encoding="utf-8") as jaccard_file:
+            json.dump(docs_with_terms, jaccard_file, ensure_ascii=False)
 
-    with open('Doc_length.json', "w") as docs_length_file:
-        json.dump(docs_length, docs_length_file)
+
+def index_for_cosine(tokens, news_id):
+    positional_index.add_to_index(tokens, news_id)
+
+    from collections import Counter
+    tokens_in_doc_freq = dict(Counter(tokens))
+    docs_length.append(calculate_length(tokens_in_doc_freq))
+
+
+def index_for_jaccard(tokens, news_id):
+    docs_with_terms.append({news_id: list(set(tokens))})
 
 
 def calculate_length(freqs: dict):
@@ -89,5 +103,8 @@ def calculate_length(freqs: dict):
 
 
 positional_index = PositionalIndex()
+# used for saving documents' length for calculating score later
+docs_length = []
+docs_with_terms = []
 construct_index("./data.json", positional_index)
 # print(positional_index.pos_index)
