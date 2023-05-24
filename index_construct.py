@@ -17,6 +17,11 @@ Positional_index = {
 import json
 from preprocessing import Preprocessing
 
+DATA_PATH = "./IR_data_news_12k.json"
+POSITIONAL_INDEX_PATH = './IR_positional_index.json'
+DOC_LENGTH_PATH = './IR_Doc_length.json'
+JACCARD_SET_PATH = 'IR_jaccard_set.json'
+CHMP_LIST_PATH = './IR_champion_list.json'
 
 SIMILARITY = "COSINE"  # COSINE or JACCARD
 R = 200
@@ -52,9 +57,9 @@ class PositionalIndex:
                                                                         "positions": [i]}]}
 
 
-def construct_index(path):
+def construct_index():
 
-    with open(path, 'r', encoding="utf-8") as data_file:
+    with open(DATA_PATH, 'r', encoding="utf-8") as data_file:
         data = json.load(data_file)
 
     for news_id, other in data.items():
@@ -66,13 +71,13 @@ def construct_index(path):
             index_for_jaccard(tokens, news_id)
 
     if SIMILARITY == "COSINE":
-        with open("positional_index.json", "w", encoding="utf-8") as final_index:
+        with open(POSITIONAL_INDEX_PATH, "w", encoding="utf-8") as final_index:
             json.dump(positional_index.pos_index, final_index, ensure_ascii=False)
-        with open('Doc_length.json', "w") as docs_length_file:
+        with open(DOC_LENGTH_PATH, "w") as docs_length_file:
             json.dump(docs_length, docs_length_file)
         create_champion_list()
     else:
-        with open('jaccard_set.json', 'w', encoding="utf-8") as jaccard_file:
+        with open(JACCARD_SET_PATH, 'w', encoding="utf-8") as jaccard_file:
             json.dump(docs_with_terms, jaccard_file, ensure_ascii=False)
 
 
@@ -111,7 +116,7 @@ def create_champion_list():
             'postings': sorted(rest['postings'], key=lambda x: x['in_doc_freq'], reverse=True)[:R]
         }
 
-    with open('champion_list.json', 'w', encoding="utf-8") as chmp_file:
+    with open(CHMP_LIST_PATH, 'w', encoding="utf-8") as chmp_file:
         json.dump(champion_index, chmp_file, ensure_ascii=False)
 
 
@@ -119,5 +124,5 @@ positional_index = PositionalIndex()
 # used for saving documents' length for calculating score later
 docs_length = []
 docs_with_terms = []
-construct_index("./data.json")
+construct_index()
 # print(positional_index.pos_index)

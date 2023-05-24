@@ -3,18 +3,23 @@ from preprocessing import Preprocessing
 from math import log10
 
 
+CHMP_LIST_PATH = './IR_champion_list.json'
+POSITIONAL_INDEX_PATH = './IR_positional_index.json'
+DOC_LENGTH_PATH = './IR_Doc_length.json'
+JACCARD_SET_PATH = 'IR_jaccard_set.json'
+
 TOTAL_DOCS = 6
-TOP_K = 4
+TOP_K = 10
 SIMILARITY = "COSINE"  # COSINE or JACCARD
 USE_CHMP_LIST = True
 
 
 def cosine_score():
     if USE_CHMP_LIST:
-        with open('./champion_list.json', 'r', encoding="utf-8") as data_file:
+        with open(CHMP_LIST_PATH, 'r', encoding="utf-8") as data_file:
             index = json.load(data_file)
     else:
-        with open('./positional_index.json', 'r', encoding="utf-8") as data_file:
+        with open(POSITIONAL_INDEX_PATH, 'r', encoding="utf-8") as data_file:
             index = json.load(data_file)
 
     scores = {}
@@ -30,7 +35,7 @@ def cosine_score():
             else:
                 scores[posting['doc_id']] = w_doc * w_term
 
-    with open('./Doc_length.json', 'r') as length_file:
+    with open(DOC_LENGTH_PATH, 'r') as length_file:
         length = json.load(length_file)
 
     for doc_id in scores.keys():
@@ -52,7 +57,7 @@ def jaccard_score():
 
     query_as_set = set(query_terms)
 
-    with open('jaccard_set.json', 'r', encoding="utf-8") as jaccard_file:
+    with open(JACCARD_SET_PATH, 'r', encoding="utf-8") as jaccard_file:
         docs_terms = json.load(jaccard_file)
 
     for doc in docs_terms:
