@@ -5,12 +5,17 @@ from math import log10
 
 TOTAL_DOCS = 6
 TOP_K = 4
-SIMILARITY = "JACCARD"  # or JACCARD
+SIMILARITY = "COSINE"  # COSINE or JACCARD
+USE_CHMP_LIST = True
 
 
 def cosine_score():
-    with open('./positional_index.json', 'r', encoding="utf-8") as data_file:
-        index = json.load(data_file)
+    if USE_CHMP_LIST:
+        with open('./champion_list.json', 'r', encoding="utf-8") as data_file:
+            index = json.load(data_file)
+    else:
+        with open('./positional_index.json', 'r', encoding="utf-8") as data_file:
+            index = json.load(data_file)
 
     scores = {}
     # query_terms = query.split(" ")

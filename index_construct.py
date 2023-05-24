@@ -18,7 +18,8 @@ import json
 from preprocessing import Preprocessing
 
 
-SIMILARITY = "JACCARD"  # or JACCARD
+SIMILARITY = "COSINE"  # COSINE or JACCARD
+R = 200
 
 
 class PositionalIndex:
@@ -28,10 +29,8 @@ class PositionalIndex:
 
     def add_to_index(self, tokens, doc_id):
         for i, token in enumerate(tokens):
-            if token in self.pos_index: # token is available in index
+            if token in self.pos_index:  # token is available in index
                 self.pos_index[token]['total_freq'] += 1
-
-                doc_found = False
 
                 # token is ready, we check if it is belong to the current doc_id which is being processed
                 # we need to update the posting ny adding the new position and increase freq
@@ -53,7 +52,7 @@ class PositionalIndex:
                                                                         "positions": [i]}]}
 
 
-def construct_index(path, positional_index: PositionalIndex):
+def construct_index(path):
 
     with open(path, 'r', encoding="utf-8") as data_file:
         data = json.load(data_file)
@@ -71,6 +70,7 @@ def construct_index(path, positional_index: PositionalIndex):
             json.dump(positional_index.pos_index, final_index, ensure_ascii=False)
         with open('Doc_length.json', "w") as docs_length_file:
             json.dump(docs_length, docs_length_file)
+        create_champion_list()
     else:
         with open('jaccard_set.json', 'w', encoding="utf-8") as jaccard_file:
             json.dump(docs_with_terms, jaccard_file, ensure_ascii=False)
@@ -102,9 +102,22 @@ def calculate_length(freqs: dict):
     return sqrt(squared_sum)
 
 
+def create_champion_list():
+    champion_index = {}
+
+    for word, rest in positional_index.pos_index.items():
+        champion_index[word] = {
+            "total_freq": rest['total_freq'],
+            'postings': sorted(rest['postings'], key=lambda x: x['in_doc_freq'], reverse=True)[:R]
+        }
+
+    with open('champion_list.json', 'w', encoding="utf-8") as chmp_file:
+        json.dump(champion_index, chmp_file, ensure_ascii=False)
+
+
 positional_index = PositionalIndex()
 # used for saving documents' length for calculating score later
 docs_length = []
 docs_with_terms = []
-construct_index("./data.json", positional_index)
+construct_index("./data.json")
 # print(positional_index.pos_index)
