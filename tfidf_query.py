@@ -1,17 +1,79 @@
 import json
 from preprocessing import Preprocessing
 from math import log10
+import tkinter as tk
 
 
+SOURCE_NEWS_PATH = './IR_data_news_12k.json'
 CHMP_LIST_PATH = './IR_champion_list.json'
 POSITIONAL_INDEX_PATH = './IR_positional_index.json'
 DOC_LENGTH_PATH = './IR_Doc_length.json'
-JACCARD_SET_PATH = 'IR_jaccard_set.json'
-
-TOTAL_DOCS = 6
+JACCARD_SET_PATH = './IR_jaccard_set.json'
+TOTAL_DOCS = 12360
 TOP_K = 10
-SIMILARITY = "COSINE"  # COSINE or JACCARD
-USE_CHMP_LIST = True
+SIMILARITY = None  # COSINE or JACCARD
+USE_CHMP_LIST = None
+
+
+def create_gui():
+    def search():
+        global query_terms
+        global SIMILARITY, USE_CHMP_LIST
+        query_terms.clear()
+
+        query = entry.get()
+        query_terms = Preprocessing.preprocess(query)
+
+        if cosine_var.get():  # use COSINE similarity
+            SIMILARITY = "COSINE"
+            USE_CHMP_LIST = champion_var.get()
+            result = cosine_score()
+        else:
+            SIMILARITY = "JACCARD"
+            result = jaccard_score()
+
+        results_text.delete('1.0', tk.END)
+        results_text.insert(tk.END, "Results for '{}'...\n".format(query))
+
+        with open(SOURCE_NEWS_PATH, 'r', encoding="utf-8") as source:
+            source_data = json.load(source)
+
+        for r in result:
+            results_text.insert(tk.END, f"سند شماره {r[0]}: {source_data[r[0]]['title']}\n")
+            print(r[1])
+
+    root = tk.Tk()
+    root.title("IR Project")
+
+    # Entry widget for search term
+    entry = tk.Entry(root, width=50)
+    entry.pack(padx=10, pady=10)
+
+    # Button to initiate search
+    button = tk.Button(root, text="Search", command=search)
+    button.pack(padx=10, pady=5)
+
+    cosine_var = tk.BooleanVar()
+    cosine_check = tk.Checkbutton(root, text="Use Cosine Similarity", variable=cosine_var)
+    cosine_check.pack(padx=10, pady=10)
+
+    champion_var = tk.BooleanVar()
+    champion_check = tk.Checkbutton(root, text="Use Champion List", variable=champion_var)
+    champion_check.pack(padx=10, pady=10)
+
+    # Plain text widget for showing results
+    results_frame = tk.Frame(root)
+    results_frame.pack(padx=10, pady=10)
+
+    results_text = tk.Text(results_frame, height=10, width=75)
+    results_text.pack(side=tk.LEFT)
+
+    scrollbar = tk.Scrollbar(results_frame, command=results_text.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    results_text.config(yscrollcommand=scrollbar.set)
+
+    root.mainloop()
 
 
 def cosine_score():
@@ -70,9 +132,10 @@ def jaccard_score():
     return top_k_docs(scores, TOP_K)
 
 
-query = "افزایش بودجه"
-query_terms = Preprocessing.preprocess(query)
-if SIMILARITY == "COSINE":
-    print(cosine_score())
-else:
-    print(jaccard_score())
+query_terms = []
+create_gui()
+# query = "بودجه"
+# if SIMILARITY == "COSINE":
+#     print(cosine_score())
+# else:
+#     print(jaccard_score())
