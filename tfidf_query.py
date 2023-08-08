@@ -65,7 +65,7 @@ def create_gui():
     results_frame = tk.Frame(root)
     results_frame.pack(padx=10, pady=10)
 
-    results_text = tk.Text(results_frame, height=10, width=75)
+    results_text = tk.Text(results_frame, height=15, width=100)
     results_text.pack(side=tk.LEFT)
 
     scrollbar = tk.Scrollbar(results_frame, command=results_text.yview)
